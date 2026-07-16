@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/PortfolioLab.Api/PortfolioLab.Api.csproj" />
+    <Project Path="src/PortfolioLab.Application/PortfolioLab.Application.csproj" />
+    <Project Path="src/PortfolioLab.Domain/PortfolioLab.Domain.csproj" />
+    <Project Path="src/PortfolioLab.Infrastructure/PortfolioLab.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/PortfolioLab.Application.Tests/PortfolioLab.Application.Tests.csproj" />
+  </Folder>
+</Solution>
