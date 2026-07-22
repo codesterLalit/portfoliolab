@@ -13,7 +13,8 @@ public class PortfolioAnalysisService
     
     public PortfolioReport GenerateReport(string ticker, double riskFreeRate)
     {
-        var prices = _priceDataProvider.GetPrices(ticker);
+        var portfolio = new Portfolio(_priceDataProvider.GetPrices(ticker));
+        var prices = portfolio.PriceHistory;
 
         return new PortfolioReport(
             AnnualisedVolatility: Analytics.Volatility(prices),

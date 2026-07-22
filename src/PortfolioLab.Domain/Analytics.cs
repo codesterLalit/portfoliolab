@@ -65,4 +65,20 @@ public static class Analytics
         double fraction = position - lower;
         return sorted[lower] + fraction * (sorted[upper] - sorted[lower]);
     }
+
+    public static double Correlation(IReadOnlyList<PriceBar> priceA, IReadOnlyList<PriceBar> priceB)
+    {
+        var returnsA = SimpleReturns(priceA);
+        var returnsB = SimpleReturns(priceB);
+
+        double meanA = returnsA.Average();
+        double meanB = returnsB.Average();
+
+        double covariance = returnsA.Zip(returnsB, (a, b) => (a - meanA) * (b - meanB)).Sum() / (returnsA.Length -1);
+
+        double stdA = Math.Sqrt(returnsA.Sum(a => Math.Pow(a - meanA, 2)) / (returnsA.Length - 1));
+        double stdB = Math.Sqrt(returnsB.Sum(b => Math.Pow(b - meanB, 2)) / (returnsB.Length - 1));
+
+        return covariance / (stdA * stdB);
+    }
 }

@@ -31,7 +31,7 @@ public class AnalyticsTests
     }
 
     [Fact]
-  public void MaxDrawdown_Matches_HandCalculated_Value()
+    public void MaxDrawdown_Matches_HandCalculated_Value()
     {
         double result = Analytics.MaxDrawdown(SamplePrices);
         Assert.Equal(-0.019048, result, precision: 4);
@@ -42,5 +42,21 @@ public class AnalyticsTests
     {
         double result = Analytics.HistoricalVaR95(SamplePrices);
         Assert.Equal(-0.017661, result, precision: 4);
+    }
+
+    [Fact]
+    public void Correlation_Matches_HandCalculated_Value()
+    {
+        PriceBar[] msft =
+        [
+            new(new DateOnly(2024,1,1), 200),
+        new(new DateOnly(2024,1,2), 198),
+        new(new DateOnly(2024,1,3), 202),
+        new(new DateOnly(2024,1,4), 199),
+        new(new DateOnly(2024,1,5), 205)
+        ];
+
+        double result = Analytics.Correlation(SamplePrices, msft);
+        Assert.Equal(-0.977, result, precision: 2);
     }
 }

@@ -1,8 +1,17 @@
+using PortfolioLab.Application;
+using PortfolioLab.Infrastructure;
+
 var builder = WebApplication.CreateBuilder(args);
 
 // Add services to the container.
 // Learn more about configuring OpenAPI at https://aka.ms/aspnet/openapi
 builder.Services.AddOpenApi();
+
+builder.Services.AddScoped<IPriceDataProvider>(_ => 
+    new CsvPriceDataProvider(@"c:\PortfolioData")
+);
+
+builder.Services.AddScoped<PortfolioAnalysisService>();
 
 var app = builder.Build();
 
@@ -32,6 +41,12 @@ app.MapGet("/weatherforecast", () =>
     return forecast;
 })
 .WithName("GetWeatherForecast");
+
+app.MapGet("/portfolio/{ticker}/report", (string ticker, double riskFreeRate, PortfolioAnalysisService service) =>
+{
+    var report = service.GenerateReport(ticker, riskFreeRate);
+    return Results.Ok(report);
+});
 
 app.Run();
 
