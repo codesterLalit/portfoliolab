@@ -48,4 +48,21 @@ public static class Analytics
 
         return (annualReturn - riskFreeRate) / annualVol;
     }
+
+    public static double HistoricalVaR95(IReadOnlyList<PriceBar> prices)
+    {
+        var returns = SimpleReturns(prices);
+        var sorted = returns.OrderBy(r => r).ToArray();
+
+        // 5th percentile, linear interpolation
+        double position = 0.05 * (sorted.Length - 1);
+        int lower = (int) Math.Floor(position);
+        int upper = (int) Math.Ceiling(position);
+
+
+        if(lower == upper) return sorted[lower];
+
+        double fraction = position - lower;
+        return sorted[lower] + fraction * (sorted[upper] - sorted[lower]);
+    }
 }
