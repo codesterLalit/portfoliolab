@@ -42,11 +42,16 @@ app.MapGet("/weatherforecast", () =>
 })
 .WithName("GetWeatherForecast");
 
-app.MapGet("/portfolio/{ticker}/report", (string ticker, double riskFreeRate, PortfolioAnalysisService service) =>
+app.MapGet("/portfolio/report", (string tickers, double riskFreeRate, PortfolioAnalysisService service) =>
 {
-    var report = service.GenerateReport(ticker, riskFreeRate);
+    var tickerWeights = tickers.Split(",")
+        .Select(pair => pair.Split(":"))
+        .ToDictionary(parts => parts[0], parts => double.Parse(parts[1]));
+
+    var report = service.GenerateReport(tickerWeights, riskFreeRate);
     return Results.Ok(report);
 });
+
 
 app.Run();
 

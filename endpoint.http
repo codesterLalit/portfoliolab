@@ -1,2 +1,2 @@
 ### Get data
-GET http://localhost:5138/portfolio/AAPL/report?riskFreeRate=0.1
+GET http://localhost:5138/portfolio/report?tickers=AAPL:0.5,MSFT:0.5&riskFreeRate=0.0

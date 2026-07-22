@@ -11,16 +11,26 @@ public class PortfolioAnalysisService
         _priceDataProvider = priceDataProvider;
     }
     
-    public PortfolioReport GenerateReport(string ticker, double riskFreeRate)
+    public PortfolioReport GenerateReport(Dictionary<string, double> tickerWeights, double riskFreeRate)
     {
-        var portfolio = new Portfolio(_priceDataProvider.GetPrices(ticker));
-        var prices = portfolio.PriceHistory;
+
+        var holdings = tickerWeights.Select(tw =>
+        {
+            var Ticker = tw.Key;
+            var Weight = tw.Value;
+            var pricePortfolio = _priceDataProvider.GetPrices(Ticker);
+            return new Holding(Ticker, pricePortfolio, Weight);
+        }).ToList();
+
+        var portofolio = new Portfolio(holdings);
+
+        var blendedReturns = Analytics.PortfolioReturns(portofolio);
 
         return new PortfolioReport(
-            AnnualisedVolatility: Analytics.Volatility(prices),
-            SharpeRatio: Analytics.Sharpe(prices, riskFreeRate),
-            MaxDrawdown: Analytics.MaxDrawdown(prices),
-            HistoricalVaR95: Analytics.HistoricalVaR95(prices)
+            AnnualisedVolatility: Analytics.Volatility(blendedReturns),
+            SharpeRatio: Analytics.Sharpe(blendedReturns, riskFreeRate),
+            MaxDrawdown: Analytics.MaxDrawdown(blendedReturns),
+            HistoricalVaR95: Analytics.HistoricalVaR95(blendedReturns)
         );
     }
 }
