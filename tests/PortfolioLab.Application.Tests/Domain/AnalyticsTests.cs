@@ -59,4 +59,41 @@ public class AnalyticsTests
         double result = Analytics.Correlation(SamplePrices, msft);
         Assert.Equal(-0.977, result, precision: 2);
     }
+
+    [Fact]
+    public void PortfolioReturns_Blends_Correctly()
+    {
+        var msft = new PriceBar[]
+        {
+        new(new DateOnly(2024,1,1), 200),
+        new(new DateOnly(2024,1,2), 198),
+        new(new DateOnly(2024,1,3), 202),
+        new(new DateOnly(2024,1,4), 199),
+        new(new DateOnly(2024,1,5), 205)
+        };
+
+        var portfolio = new Portfolio(
+        [
+            new Holding("AAPL", SamplePrices, 0.5),
+        new Holding("MSFT", msft, 0.5)
+        ]);
+
+        var blended = Analytics.PortfolioReturns(portfolio);
+
+        Assert.Equal(0.005, blended[0], precision: 3);
+        Assert.Equal(0.005199, blended[1], precision: 4);
+        Assert.Equal(0.012376, blended[2], precision: 4);
+        Assert.Equal(0.005551, blended[3], precision: 4);
+    }
+
+    [Fact]
+    public void MultiAsset_Report_Metrics_Match_HandCalculated_Values()
+    {
+        double[] blendedReturns = [0.005, 0.005199, 0.012376, 0.005551];
+
+        Assert.Equal(0.056677, Analytics.Volatility(blendedReturns), precision: 2);
+        Assert.Equal(31.2648, Analytics.Sharpe(blendedReturns, riskFreeRate: 0.0), precision: 2);
+        Assert.Equal(0.0, Analytics.MaxDrawdown(blendedReturns), precision: 2);
+        Assert.Equal(0.005030, Analytics.HistoricalVaR95(blendedReturns), precision: 2);
+    }
 }
