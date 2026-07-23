@@ -1,5 +1,6 @@
 using System.Text.Json;
 using MediatR;
+using Microsoft.EntityFrameworkCore;
 using PortfolioLab.Application;
 
 namespace PortfolioLab.Infrastructure;
@@ -13,6 +14,7 @@ public class CreatePortfolioHandler: IRequestHandler<CreatePortfolioCommand, int
     {
         var entity = new SavedPortfolioEntity
         {
+          UserId = request.UserId,
           Name = request.Name,
           TickerWeightsJson = JsonSerializer.Serialize(request.TickerWeights)  
         };
@@ -28,7 +30,8 @@ public class CreatePortfolioHandler: IRequestHandler<CreatePortfolioCommand, int
 
         public async Task<bool> Handle(DeletePortfolioCommand request, CancellationToken ct)
         {
-            var entity = await _db.SavedPortfolios.FindAsync([request.Id]);
+            var entity = await _db.SavedPortfolios
+                .FirstOrDefaultAsync(p=> p.Id == request.Id && p.UserId == request.UserId, ct);
             if (entity is null) return false;
             _db.SavedPortfolios.Remove(entity);
             await _db.SaveChangesAsync(ct);

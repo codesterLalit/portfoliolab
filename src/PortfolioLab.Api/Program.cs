@@ -1,5 +1,10 @@
+using System.Text;
 using MediatR;
+using Microsoft.AspNetCore.Authentication.JwtBearer;
+using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
+using Microsoft.IdentityModel.Tokens;
+using PortfolioLab.Api;
 using PortfolioLab.Application;
 using PortfolioLab.Infrastructure;
 
@@ -31,7 +36,41 @@ builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
 
 builder.Services.AddScoped<PortfolioAnalysisService>();
 
+
+
+builder.Services.AddIdentity<IdentityUser, IdentityRole>(options =>
+{
+    options.Password.RequireNonAlphanumeric = false;
+    options.Password.RequiredLength = 6;    
+})
+    .AddEntityFrameworkStores<PriceDataDbContext>()
+    .AddDefaultTokenProviders();
+
+var jwtKey = "this-is-a-dev-only-secret-key-change-me-1234567890";
+
+builder.Services.AddAuthentication(options =>
+{
+    options.DefaultAuthenticateScheme = JwtBearerDefaults.AuthenticationScheme;
+    options.DefaultChallengeScheme = JwtBearerDefaults.AuthenticationScheme;
+})
+    .AddJwtBearer(options =>
+    {
+       options.TokenValidationParameters = new TokenValidationParameters
+       {
+         ValidateIssuer = false,
+        ValidateAudience = false,
+        ValidateLifetime = true,
+        ValidateIssuerSigningKey = true,
+        IssuerSigningKey = new SymmetricSecurityKey(Encoding.UTF8.GetBytes(jwtKey))
+       }; 
+    });
+
+builder.Services.AddAuthorization();
+
 var app = builder.Build();
+
+app.UseAuthentication();
+app.UseAuthorization();
 
 // Configure the HTTP request pipeline.
 if (app.Environment.IsDevelopment())
@@ -41,24 +80,7 @@ if (app.Environment.IsDevelopment())
 
 app.UseHttpsRedirection();
 
-var summaries = new[]
-{
-    "Freezing", "Bracing", "Chilly", "Cool", "Mild", "Warm", "Balmy", "Hot", "Sweltering", "Scorching"
-};
-
-app.MapGet("/weatherforecast", () =>
-{
-    var forecast = Enumerable.Range(1, 5).Select(index =>
-        new WeatherForecast
-        (
-            DateOnly.FromDateTime(DateTime.Now.AddDays(index)),
-            Random.Shared.Next(-20, 55),
-            summaries[Random.Shared.Next(summaries.Length)]
-        ))
-        .ToArray();
-    return forecast;
-})
-.WithName("GetWeatherForecast");
+app.MapAuthEndpoints(jwtKey);
 
 app.MapGet("/portfolio/report", async (string tickers, double riskFreeRate, IMediator mediator) =>
 {
@@ -86,27 +108,31 @@ app.MapGet("/portfolio/report", async (string tickers, double riskFreeRate, IMed
     }
 });
 
-app.MapPost("/portfolios", async(CreatePortfolioCommand cmd, IMediator mediator) =>{
-    var id = await mediator.Send(cmd);
+app.MapPost("/portfolios", async(CreatePortfolioCommand cmd, IMediator mediator, HttpContext ctx) =>{
+    var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
+    var id = await mediator.Send(cmd with {UserId = userId});
     return Results.Created($"/portfolios/{id}", new {id});    
-});
+}).RequireAuthorization();
 
-app.MapGet("/portfolios/{id:int}", async (int id, IMediator mediator) =>
+app.MapGet("/portfolios/{id:int}", async (int id, IMediator mediator, HttpContext ctx) =>
 {
-   var portfolio = await mediator.Send(new GetPortfolioQuery(id));
+   var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
+   var portfolio = await mediator.Send(new GetPortfolioQuery(id, userId));
    return portfolio is null? Results.NotFound() : Results.Ok(portfolio); 
-});
+}).RequireAuthorization();
 
-app.MapGet("/portfolios", async(IMediator mediator) =>
+app.MapGet("/portfolios", async(IMediator mediator, HttpContext ctx) =>
 {
-   return Results.Ok(await mediator.Send(new ListPortfoliosQuery())); 
-});
+    var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
+   return Results.Ok(await mediator.Send(new ListPortfoliosQuery(userId))); 
+}).RequireAuthorization();
 
-app.MapDelete("/portfolios/{id:int}", async(int id, IMediator mediator) =>
+app.MapDelete("/portfolios/{id:int}", async(int id, IMediator mediator, HttpContext ctx) =>
 {
-   var deleted = await mediator.Send(new DeletePortfolioCommand(id));
+    var userId = ctx.User.FindFirst(System.Security.Claims.ClaimTypes.NameIdentifier)!.Value;
+   var deleted = await mediator.Send(new DeletePortfolioCommand(id, userId));
    return deleted ? Results.NoContent() : Results.NotFound();
-});
+}).RequireAuthorization();
 
 app.Run();
 

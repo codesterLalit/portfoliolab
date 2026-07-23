@@ -12,7 +12,8 @@ public class GetPortfolioHandler: IRequestHandler<GetPortfolioQuery, SavedPortfo
 
     public async Task<SavedPortfolioDto?> Handle(GetPortfolioQuery request, CancellationToken ct)
     {
-        var entity = await _db.SavedPortfolios.FindAsync([request.Id]);
+        var entity = await _db.SavedPortfolios
+            .FirstOrDefaultAsync(p=> p.Id == request.Id && p.UserId == request.UserId, ct);
         if (entity is null) return null;
 
         var weights = JsonSerializer.Deserialize<Dictionary<string, double>>(entity.TickerWeightsJson)!;
@@ -27,7 +28,7 @@ public class ListPortfoliosHandler: IRequestHandler<ListPortfoliosQuery, List<Sa
 
     public async Task<List<SavedPortfolioDto>> Handle(ListPortfoliosQuery request, CancellationToken ct)
     {
-        var entities = await _db.SavedPortfolios.ToListAsync(ct);
+        var entities = await _db.SavedPortfolios.Where(p => p.UserId == request.UserId).ToListAsync(ct);
         return entities.Select(e => new SavedPortfolioDto(
             e.Id, e.Name, JsonSerializer.Deserialize<Dictionary<string, double>>(e.TickerWeightsJson)!
         )).ToList();
