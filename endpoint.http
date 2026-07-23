@@ -10,14 +10,43 @@ Content-Type: application/json
   "tickerWeights": { "AAPL": 0.5, "MSFT": 0.5 }
 }
 
-### List
+### 1. Register a new user
+POST http://localhost:5138/register
+Content-Type: application/json
+
+{ "email": "test@test.com", "password": "Test123" }
+
+### 2. Login — copy the "token" value from the response
+POST http://localhost:5138/login
+Content-Type: application/json
+
+{ "email": "test@test.com", "password": "Test123" }
+
+### 3. Create a portfolio — paste your token below
+POST http://localhost:5138/portfolios
+Content-Type: application/json
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjExOWRmZWI0LTYzZjYtNGRlZC05MDQ4LTk4ZmI0OTY3YTQwYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5jb20iLCJleHAiOjE3ODQ4NDU0NTl9.0ZT2q5FZbxvVvcEW3LOuPYiokFH-lVNm7bLorpzJhno
+
+{
+  "name": "My First Portfolio",
+  "tickerWeights": { "AAPL": 0.5, "MSFT": 0.5 }
+}
+
+### 4. List portfolios (should show the one you just created)
+GET http://localhost:5138/portfolios
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjExOWRmZWI0LTYzZjYtNGRlZC05MDQ4LTk4ZmI0OTY3YTQwYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5jb20iLCJleHAiOjE3ODQ4NDU1NDd9.fRFRbzqEELbuVov9dxF-3YYqp-2MRTTXPJLadJlfqSU
+
+### 5. Get portfolio by id — replace 1 with the actual id from step 3's response
+GET http://localhost:5138/portfolios/4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjExOWRmZWI0LTYzZjYtNGRlZC05MDQ4LTk4ZmI0OTY3YTQwYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5jb20iLCJleHAiOjE3ODQ4NDU0NTl9.0ZT2q5FZbxvVvcEW3LOuPYiokFH-lVNm7bLorpzJhno
+
+### 6. Try without a token — should return 401 Unauthorized
 GET http://localhost:5138/portfolios
 
-### Get by id (replace 1 with the id returned above)
-GET http://localhost:5138/portfolios/2
+### 7. Delete it
+DELETE http://localhost:5138/portfolios/4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjExOWRmZWI0LTYzZjYtNGRlZC05MDQ4LTk4ZmI0OTY3YTQwYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5jb20iLCJleHAiOjE3ODQ4NDU1NDd9.fRFRbzqEELbuVov9dxF-3YYqp-2MRTTXPJLadJlfqSU
 
-### Delete
-DELETE http://localhost:5138/portfolios/1
-
-### Confirm delete (should 404)
-GET http://localhost:5138/portfolios/2
+### 8. Confirm it's gone — should 404
+GET http://localhost:5138/portfolios/4
+Authorization: Bearer eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJodHRwOi8vc2NoZW1hcy54bWxzb2FwLm9yZy93cy8yMDA1LzA1L2lkZW50aXR5L2NsYWltcy9uYW1laWRlbnRpZmllciI6IjExOWRmZWI0LTYzZjYtNGRlZC05MDQ4LTk4ZmI0OTY3YTQwYSIsImh0dHA6Ly9zY2hlbWFzLnhtbHNvYXAub3JnL3dzLzIwMDUvMDUvaWRlbnRpdHkvY2xhaW1zL2VtYWlsYWRkcmVzcyI6InRlc3RAdGVzdC5jb20iLCJleHAiOjE3ODQ4NDU1NDd9.fRFRbzqEELbuVov9dxF-3YYqp-2MRTTXPJLadJlfqSU
