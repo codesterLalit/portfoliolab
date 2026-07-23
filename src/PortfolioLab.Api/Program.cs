@@ -24,6 +24,11 @@ builder.Services.AddScoped<IPriceDataProvider>(sp => sp.GetRequiredService<Stooq
 
 builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssembly(typeof(GenerateReportQuery).Assembly));
 
+builder.Services.AddMediatR(cfg => cfg.RegisterServicesFromAssemblies(
+    typeof(GenerateReportQuery).Assembly,
+    typeof(CreatePortfolioHandler).Assembly
+));
+
 builder.Services.AddScoped<PortfolioAnalysisService>();
 
 var app = builder.Build();
@@ -81,6 +86,27 @@ app.MapGet("/portfolio/report", async (string tickers, double riskFreeRate, IMed
     }
 });
 
+app.MapPost("/portfolios", async(CreatePortfolioCommand cmd, IMediator mediator) =>{
+    var id = await mediator.Send(cmd);
+    return Results.Created($"/portfolios/{id}", new {id});    
+});
+
+app.MapGet("/portfolios/{id:int}", async (int id, IMediator mediator) =>
+{
+   var portfolio = await mediator.Send(new GetPortfolioQuery(id));
+   return portfolio is null? Results.NotFound() : Results.Ok(portfolio); 
+});
+
+app.MapGet("/portfolios", async(IMediator mediator) =>
+{
+   return Results.Ok(await mediator.Send(new ListPortfoliosQuery())); 
+});
+
+app.MapDelete("/portfolios/{id:int}", async(int id, IMediator mediator) =>
+{
+   var deleted = await mediator.Send(new DeletePortfolioCommand(id));
+   return deleted ? Results.NoContent() : Results.NotFound();
+});
 
 app.Run();
 

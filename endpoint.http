@@ -1,2 +1,23 @@
 ### Get data
 GET http://localhost:5138/portfolio/report?tickers=AAPL:0.5,MSFT:0.5&riskFreeRate=0.0
+
+### Create
+POST http://localhost:5138/portfolios
+Content-Type: application/json
+
+{
+  "name": "My Test Portfolio",
+  "tickerWeights": { "AAPL": 0.5, "MSFT": 0.5 }
+}
+
+### List
+GET http://localhost:5138/portfolios
+
+### Get by id (replace 1 with the id returned above)
+GET http://localhost:5138/portfolios/2
+
+### Delete
+DELETE http://localhost:5138/portfolios/1
+
+### Confirm delete (should 404)
+GET http://localhost:5138/portfolios/2
